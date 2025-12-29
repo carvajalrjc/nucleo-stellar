@@ -5,6 +5,8 @@ import {
   Operation,
   Asset,
   BASE_FEE,
+  Transaction,
+  xdr,
 } from "@stellar/stellar-sdk";
 import {
   STELLAR_NETWORK,
@@ -95,6 +97,25 @@ export class StellarService {
     }
   }
 
+  private transactionBuilder(sourceAccount: Horizon.AccountResponse) {
+    return new TransactionBuilder(sourceAccount, {
+      networkPassphrase: this.networkPassphrase,
+      fee: BASE_FEE,
+    });
+  }
+
+  private createPaymentOperation(
+    amount: string,
+    asset: Asset,
+    destination: string,
+  ): xdr.Operation<Operation> {
+    return Operation.payment({
+      amount,
+      asset,
+      destination,
+    });
+  }
+
   async payment(
     senderPubKey: string,
     senderSecret: string,
@@ -104,25 +125,28 @@ export class StellarService {
     const sourceAccount = await this.loadAccount(senderPubKey);
     const sourceKeypair = Keypair.fromSecret(senderSecret);
 
-    const transaction = new TransactionBuilder(sourceAccount, {
-      networkPassphrase: this.networkPassphrase,
-      fee: BASE_FEE,
-    })
-      .addOperation(
-        Operation.payment({
-          amount,
-          asset: Asset.native(),
-          destination: receiverPubKey,
-        }),
-      )
+    const transactionBuilder = this.transactionBuilder(sourceAccount);
+    const paymentOperation = this.createPaymentOperation(
+      amount,
+      Asset.native(),
+      receiverPubKey,
+    );
+
+    const transaction = transactionBuilder
+      .addOperation(paymentOperation)
       .setTimeout(180)
       .build();
 
     transaction.sign(sourceKeypair);
 
+    return await this.submitTransaction(transaction);
+  }
+
+  private async submitTransaction(
+    transaction: Transaction,
+  ): Promise<Horizon.HorizonApi.SubmitTransactionResponse> {
     try {
-      const result = await this.server.submitTransaction(transaction);
-      return result;
+      return await this.server.submitTransaction(transaction);
     } catch (error: unknown) {
       console.error(error);
       if (

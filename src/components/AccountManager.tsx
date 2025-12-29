@@ -5,8 +5,8 @@ import { saveAccountToStorage } from "../utils/local-storage";
 import { IAccount, AccountBalance } from "../interfaces/account";
 import AccountCard from "./AccountCard";
 import useModal from "../hooks/useModal";
-import StellarExpertLink from "./StellarExpertLink";
 import PaymentModal from "./PaymentModal";
+import StellarExpertLink from "./StellarExpertLink";
 
 const stellarService = new StellarService();
 
