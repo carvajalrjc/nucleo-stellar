@@ -1,6 +1,6 @@
 [package]
-name = "guess-the-number"
-description = "Admin sets up the pot, anyone can guess to win it"
+name = "rent-a-car"
+description = "Admin sets up cars, anyone can rent a car"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
